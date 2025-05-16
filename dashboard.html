@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoSense IoT - Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <style>
+        :root {
+            --primary-dark: #0d1b2a;
+            --secondary-dark: #1b263b;
+            --accent-blue: #2a6f97;
+            --light-blue: #61a5c2;
+            --highlight: #fc7a57;
+            --text-light: #e0e1dd;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-image: url('logo.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: var(--text-light);
+            position: relative;
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(13, 27, 42, 0.9);
+            z-index: -1;
+        }
+
+        header {
+            background-color: var(--secondary-dark);
+            padding: 15px 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            margin-left: 20px;
+        }
+
+        .logo {
+            width: 50px;
+            height: 50px;
+            background-color: var(--light-blue);
+            border-radius: 50%;
+            margin-right: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .logo i {
+            font-size: 24px;
+            color: var(--primary-dark);
+        }
+
+        header h1 {
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            font-size: 1.8rem;
+            margin-right: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .navbar {
+            background-color: var(--primary-dark);
+            border-radius: 40px;
+            margin: 20px auto;
+            padding: 10px;
+            max-width: 90%;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn {
+            background-color: transparent;
+            color: var(--text-light);
+            padding: 10px 20px;
+            margin: 5px 10px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        .btn i {
+            margin-right: 8px;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background-color: var(--accent-blue);
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .active {
+            background-color: var(--accent-blue);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .card {
+            background-color: var(--secondary-dark);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background-color: var(--light-blue);
+        }
+
+        .card h2 {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+        }
+
+        .card h2 i {
+            margin-right: 10px;
+            color: var(--light-blue);
+        }
+
+        .card p {
+            margin: 15px 0;
+            font-size: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-value {
+            font-weight: 600;
+            font-size: 1.1rem;
+            padding: 5px 10px;
+            background-color: rgba(97, 165, 194, 0.1);
+            border-radius: 8px;
+        }
+
+        .highlight {
+            font-weight: bold;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-left: 10px;
+        }
+
+        .status-good {
+            background-color: rgba(72, 187, 120, 0.2);
+            color: #48bb78;
+        }
+
+        .status-medium {
+            background-color: rgba(246, 173, 85, 0.2);
+            color: #f6ad55;
+        }
+
+        .status-bad {
+            background-color: rgba(245, 101, 101, 0.2);
+            color: #f56565; 
+        }
+
+        .chart-container {
+            background-color: var(--secondary-dark);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 30px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            grid-column: 1 / -1;
+            height: 400px;
+            position: relative;
+        }
+
+        canvas {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        .toggle-switch {
+            display: inline-block;
+            position: relative;
+            width: 60px;
+            height: 34px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--highlight);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px 0;
+            margin-top: 40px;
+            font-size: 0.9rem;
+            color: rgba(224, 225, 221, 0.7);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            header {
+                flex-direction: column;
+                padding: 10px 0;
+            }
+            
+            .logo-container {
+                margin-bottom: 10px;
+                margin-left: 0;
+            }
+            
+            header h1 {
+                font-size: 1.4rem;
+                margin-right: 0;
+            }
+            
+            .navbar {
+                padding: 5px;
+            }
+            
+            .btn {
+                padding: 8px 15px;
+                font-size: 0.8rem;
+            }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: var(--highlight);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transform: translateX(200%);
+            z-index: 1000;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        /* Animaciones */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            animation: fadeIn 0.6s ease forwards;
+        }
+
+        .card:nth-child(1) { animation-delay: 0.1s; }
+        .card:nth-child(2) { animation-delay: 0.3s; }
+        .card:nth-child(3) { animation-delay: 0.5s; }
+        .chart-container { animation-delay: 0.7s; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <div class="logo">
+                <i class="fas fa-leaf"></i>
+            </div>
+            <h1>EcoSense IoT</h1>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="navbar">
+            <button class="btn active"><i class="fas fa-home"></i> Inicio</button>
+            <button class="btn"><i class="fas fa-chart-line"></i> Estadísticas</button>
+            <button class="btn"><i class="fas fa-cog"></i> Configuración</button>
+            <button class="btn"><i class="fas fa-users"></i> Equipo</button>
+            <button class="btn"><i class="fas fa-question-circle"></i> Ayuda</button>
+            <button class="btn"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
+        </div>
+        
+        <div class="dashboard-grid">
+            <div class="card">
+                <h2><i class="fas fa-thermometer-half"></i> Temperatura y Humedad</h2>
+                <p>
+                    <span>Temperatura</span>
+                    <span class="card-value" id="temp">--</span>
+                </p>
+                <p>
+                    <span>Humedad</span>
+                    <span class="card-value" id="humidity">--</span>
+                </p>
+            </div>
+            
+            <div class="card">
+                <h2><i class="fas fa-wind"></i> Calidad del Aire</h2>
+                <p>
+                    <span>Concentración</span>
+                    <span class="card-value">
+                        <span id="air">--</span> PPM
+                        <span id="air-status" class="highlight">--</span>
+                    </span>
+                </p>
+                <p>
+                    <span>Última actualización</span>
+                    <span class="card-value" id="last-air-update">--</span>
+                </p>
+            </div>
+            
+            <div class="card">
+                <h2><i class="fas fa-lightbulb"></i> Control de Iluminación</h2>
+                <p>
+                    <span>Nivel actual</span>
+                    <span class="card-value">
+                        <span id="light">--</span> lx
+                        <span id="light-status" class="highlight">--</span>
+                    </span>
+                </p>
+                <p>
+                    <span>Control del foco</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="light-toggle" onclick="toggleFoco()">
+                        <span class="slider"></span>
+                    </label>
+                </p>
+                <p>
+                    <span>Estado</span>
+                    <span class="card-value" id="foco">--</span>
+                </p>
+            </div>
+            
+            <div class="chart-container">
+                <h2><i class="fas fa-chart-line"></i> Evolución de la Calidad del Aire</h2>
+                <canvas id="chart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        &copy; 2025 EcoSense IoT - Monitoreo Ambiental Inteligente
+    </div>
+    
+    <div class="notification" id="notification">
+        Cambios guardados correctamente
+    </div>
+    
+    <script>
+        // Función para mostrar notificaciones
+        function showNotification(message) {
+            const notification = document.getElementById("notification");
+            notification.textContent = message;
+            notification.classList.add("show");
+            
+            setTimeout(() => {
+                notification.classList.remove("show");
+            }, 3000);
+        }
+        
+        // Función para actualizar fecha y hora
+        function updateDateTime() {
+            const now = new Date();
+            const options = { hour: '2-digit', minute: '2-digit' };
+            return now.toLocaleTimeString('es-ES', options);
+        }
+        
+        // Función para actualizar datos
+        function actualizarDatos() {
+            // Simulamos datos variados
+            const temp = (Math.random() * 10 + 20).toFixed(1);
+            const humidity = Math.floor(Math.random() * 30 + 50);
+            const ppm = Math.floor(Math.random() * 800);
+            const lux = Math.floor(Math.random() * 1000);
+            
+            // Determinamos estados
+            const airStatus = ppm < 300 ? 'Bueno' : ppm < 600 ? 'Regular' : 'Malo';
+            const lightStatus = lux > 500 ? 'Adecuada' : 'Baja';
+            
+            // Actualizamos elementos del DOM
+            document.getElementById("temp").textContent = temp + " °C";
+            document.getElementById("humidity").textContent = humidity + " %";
+            document.getElementById("air").textContent = ppm;
+            document.getElementById("last-air-update").textContent = updateDateTime();
+            document.getElementById("light").textContent = lux;
+            
+            // Establecemos clases de estado según valores
+            const airStatusEl = document.getElementById("air-status");
+            airStatusEl.textContent = airStatus;
+            airStatusEl.className = "highlight " + 
+                (airStatus === 'Bueno' ? 'status-good' : 
+                 airStatus === 'Regular' ? 'status-medium' : 'status-bad');
+            
+            const lightStatusEl = document.getElementById("light-status");
+            lightStatusEl.textContent = lightStatus;
+            lightStatusEl.className = "highlight " + 
+                (lightStatus === 'Adecuada' ? 'status-good' : 'status-medium');
+            
+            // Actualizamos el interruptor según la luz
+            const lightToggle = document.getElementById("light-toggle");
+            const focoEl = document.getElementById("foco");
+            
+            if (lux < 300 && !lightToggle.checked) {
+                lightToggle.checked = true;
+                focoEl.textContent = "Encendido";
+            } else if (lux >= 300 && lightToggle.checked) {
+                lightToggle.checked = false;
+                focoEl.textContent = "Apagado";
+            } else {
+                focoEl.textContent = lightToggle.checked ? "Encendido" : "Apagado";
+            }
+            
+            // Actualizamos datos del gráfico
+            addData(chart);
+        }
+        
+        // Función para controlar el foco
+        function toggleFoco() {
+            const focoEl = document.getElementById("foco");
+            const lightToggle = document.getElementById("light-toggle");
+            
+            focoEl.textContent = lightToggle.checked ? "Encendido" : "Apagado";
+            
+            // Mostramos notificación
+            showNotification(lightToggle.checked ? 
+                "Foco encendido correctamente" : 
+                "Foco apagado correctamente");
+                
+            // Animación para el cambio
+            anime({
+                targets: '.card:nth-child(3)',
+                scale: [1.02, 1],
+                duration: 300,
+                easing: 'easeOutQuad'
+            });
+        }
+        
+        // Configuramos el gráfico
+        const ctx = document.getElementById("chart").getContext("2d");
+        const initialData = {
+            labels: [],
+            datasets: [{
+                label: "Calidad del Aire (PPM)",
+                data: [],
+                borderColor: "#61a5c2",
+                backgroundColor: "rgba(97, 165, 194, 0.1)",
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: "#61a5c2",
+                pointBorderColor: "#fff",
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }]
+        };
+        
+        const chart = new Chart(ctx, {
+            type: "line",
+            data: initialData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: "rgba(255, 255, 255, 0.05)"
+                        },
+                        ticks: {
+                            color: "#e0e1dd"
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: "rgba(255, 255, 255, 0.05)"
+                        },
+                        ticks: {
+                            color: "#e0e1dd"
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: "#e0e1dd"
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: "rgba(27, 38, 59, 0.9)",
+                        titleColor: "#e0e1dd",
+                        bodyColor: "#e0e1dd",
+                        borderColor: "rgba(97, 165, 194, 0.5)",
+                        borderWidth: 1,
+                        displayColors: false
+                    }
+                }
+            }
+        });
+        
+        // Función para añadir datos al gráfico
+        function addData(chart) {
+            const now = new Date();
+            const timeLabel = now.getHours() + ":" + now.getMinutes().toString().padStart(2, '0');
+            
+            if (chart.data.labels.length > 10) {
+                chart.data.labels.shift();
+                chart.data.datasets[0].data.shift();
+            }
+            
+            chart.data.labels.push(timeLabel);
+            chart.data.datasets[0].data.push(Math.floor(Math.random() * 800));
+            chart.update();
+        }
+        
+        // Añadimos algunos datos iniciales al gráfico
+        for (let i = 0; i < 6; i++) {
+            const date = new Date();
+            date.setMinutes(date.getMinutes() - (6 - i) * 10);
+            const timeLabel = date.getHours() + ":" + date.getMinutes().toString().padStart(2, '0');
+            
+            chart.data.labels.push(timeLabel);
+            chart.data.datasets[0].data.push(Math.floor(Math.random() * 800));
+        }
+        chart.update();
+        
+        // Actualizamos los datos iniciales
+        actualizarDatos();
+        
+        // Configuramos actualización periódica
+        setInterval(actualizarDatos, 5000);
+        
+        // Animaciones para elementos UI con anime.js
+        anime({
+            targets: '.navbar',
+            translateY: [20, 0],
+            opacity: [0, 1],
+            duration: 800,
+            easing: 'easeOutQuad'
+        });
+        
+        // Efecto de pulsación para el logo
+        anime({
+            targets: '.logo',
+            scale: [1, 1.1, 1],
+            duration: 2000,
+            loop: true,
+            easing: 'easeInOutQuad'
+        });
+        
+        // Efecto para los botones de la navbar
+        document.querySelectorAll('.btn').forEach(btn => {
+            btn.addEventListener('mouseenter', () => {
+                anime({
+                    targets: btn,
+                    scale: 1.05,
+                    duration: 200,
+                    easing: 'easeOutQuad'
+                });
+            });
+            
+            btn.addEventListener('mouseleave', () => {
+                anime({
+                    targets: btn,
+                    scale: 1,
+                    duration: 200,
+                    easing: 'easeOutQuad'
+                });
+            });
+        });
+    </script>
+</body>
+</html>
